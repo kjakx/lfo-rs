@@ -1,5 +1,5 @@
 use std::f64::consts::TAU;
-use dasp_signal::{Signal};
+use dasp_signal::Signal;
 
 fn phase(freq: f64, time: f64, theta: f64) -> f64 {
     (freq * time + theta).fract()
@@ -29,7 +29,7 @@ fn square(phase: f64) -> f64 {
     }
 }
 
-pub enum LFOWaveform {
+pub enum Waveform {
     Sine,
     Triangle,
     Saw,
@@ -37,7 +37,7 @@ pub enum LFOWaveform {
 }
 
 struct LFO {
-    waveform: LFOWaveform,
+    waveform: Waveform,
     freq: f64,
     theta: f64,
     gain: f64, // -1.0 <= g <= 1.0
@@ -46,7 +46,7 @@ struct LFO {
 }
 
 impl LFO {
-    pub fn new(waveform: LFOWaveform, freq: f64, sample_rate: f64) -> Self {
+    pub fn new(waveform: Waveform, freq: f64, sample_rate: f64) -> Self {
         LFO {
             waveform: waveform,
             freq: freq,
@@ -57,7 +57,7 @@ impl LFO {
         }
     }
 
-    pub fn set_waveform(&mut self, waveform: LFOWaveform) {
+    pub fn set_waveform(&mut self, waveform: Waveform) {
         self.waveform = waveform;
     }
 
@@ -78,20 +78,19 @@ impl LFO {
     }
 
     fn generate(&mut self) -> f64 {
-        use LFOWaveform::*;
         let phase = phase(self.freq, self.time_step as f64 / self.sample_rate, self.theta);
         self.increment_time_step();
         match self.waveform {
-            Sine => {
+            Waveform::Sine => {
                 sine(phase)
             },
-            Triangle => {
+            Waveform::Triangle => {
                 triangle(phase)
             },
-            Saw => {
+            Waveform::Saw => {
                 saw(phase)
             },
-            Square => {
+            Waveform::Square => {
                 square(phase)
             },
         }
@@ -102,14 +101,14 @@ impl Signal for LFO {
     type Frame = f64;
 
     fn next(&mut self) -> Self::Frame {
-        self.gain * self.generate()
+        let amp = 0.5 * self.gain;
+        amp * (self.generate() + 1.0)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotters::prelude::*;
 
     fn create_chart(lfo: &mut LFO, t_sec: f64, filename: &str, cap: &str) {
         let data_len: usize = (lfo.sample_rate * t_sec) as usize;
@@ -150,27 +149,27 @@ mod tests {
 
     #[test]
     fn sine_10hz() {
-        let mut lfo = LFO::new(LFOWaveform::Sine, 10.0, 1000.0);
+        let mut lfo = LFO::new(Waveform::Sine, 10.0, 1000.0);
         create_chart(&mut lfo, 1.0, "chart/sine_10hz.png", "sine_10hz");
     }
 
     #[test]
     fn triangle_3hz() {
-        let mut lfo = LFO::new(LFOWaveform::Triangle, 3.0, 1000.0);
+        let mut lfo = LFO::new(Waveform::Triangle, 3.0, 1000.0);
         lfo.set_theta(0.25);
         create_chart(&mut lfo, 1.0, "chart/triangle_3hz.png", "triangle_3hz");
     }
 
     #[test]
     fn saw_5hz() {
-        let mut lfo = LFO::new(LFOWaveform::Saw, 5.0, 1000.0);
+        let mut lfo = LFO::new(Waveform::Saw, 5.0, 1000.0);
         lfo.set_theta(0.5);
         create_chart(&mut lfo, 1.0, "chart/saw_5hz.png", "saw_5hz");
     }
 
     #[test]
     fn square_2hz() {
-        let mut lfo = LFO::new(LFOWaveform::Square, 2.0, 1000.0);
+        let mut lfo = LFO::new(Waveform::Square, 2.0, 1000.0);
         lfo.set_gain(0.5);
         create_chart(&mut lfo, 1.0, "chart/square_2hz.png", "square_2hz");
     }
