@@ -36,7 +36,7 @@ pub enum Waveform {
     Square,
 }
 
-struct LFO {
+pub struct LFO {
     waveform: Waveform,
     freq: f64,
     theta: f64,
