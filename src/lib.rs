@@ -109,6 +109,7 @@ impl Signal for LFO {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use plotters::prelude::*;
 
     fn create_chart(lfo: &mut LFO, t_sec: f64, filename: &str, cap: &str) {
         let data_len: usize = (lfo.sample_rate * t_sec) as usize;
