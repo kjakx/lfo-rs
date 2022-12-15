@@ -1,2 +1,2 @@
-# osc-rs
-A simple oscillator with basic waveforms
+# lfo-rs
+A simple low frequency oscillator with basic waveforms
