@@ -17,12 +17,16 @@ fn triangle(phase: f64) -> f64 {
     }
 }
 
-fn saw(phase: f64) -> f64 {
-    2.0 * phase - 1.0
+fn saw(phase: f64, ramp_up: bool) -> f64 {
+    if ramp_up {
+        2.0 * phase - 1.0
+    } else {
+        1.0 - 2.0 * phase
+    }    
 }
 
-fn square(phase: f64) -> f64 {
-    if phase < 0.5 {
+fn pulse(phase: f64, duty_ratio: f64) -> f64 {
+    if phase < duty_ratio {
         1.0
     } else {
         -1.0
@@ -32,8 +36,9 @@ fn square(phase: f64) -> f64 {
 pub enum Waveform {
     Sine,
     Triangle,
-    Saw,
-    Square,
+    SawUp,
+    SawDn,
+    Pulse(f64),
 }
 
 pub struct LFO {
@@ -87,11 +92,14 @@ impl LFO {
             Waveform::Triangle => {
                 triangle(phase)
             },
-            Waveform::Saw => {
-                saw(phase)
+            Waveform::SawUp => {
+                saw(phase, true)
             },
-            Waveform::Square => {
-                square(phase)
+            Waveform::SawDn => {
+                saw(phase, false)
+            }
+            Waveform::Pulse(duty_ratio) => {
+                pulse(phase, duty_ratio)
             },
         }
     }
@@ -157,21 +165,25 @@ mod tests {
     #[test]
     fn triangle_3hz() {
         let mut lfo = LFO::new(Waveform::Triangle, 3.0, 1000.0);
-        lfo.set_theta(0.25);
         create_chart(&mut lfo, 1.0, "chart/triangle_3hz.png", "triangle_3hz");
     }
 
     #[test]
-    fn saw_5hz() {
-        let mut lfo = LFO::new(Waveform::Saw, 5.0, 1000.0);
-        lfo.set_theta(0.5);
-        create_chart(&mut lfo, 1.0, "chart/saw_5hz.png", "saw_5hz");
+    fn sawup_5hz() {
+        let mut lfo = LFO::new(Waveform::SawUp, 5.0, 1000.0);
+        create_chart(&mut lfo, 1.0, "chart/sawup_5hz.png", "sawup_5hz");
     }
 
     #[test]
-    fn square_2hz() {
-        let mut lfo = LFO::new(Waveform::Square, 2.0, 1000.0);
+    fn sawdn_5hz() {
+        let mut lfo = LFO::new(Waveform::SawDn, 5.0, 1000.0);
+        create_chart(&mut lfo, 1.0, "chart/sawdn_5hz.png", "sawdn_5hz");
+    }
+
+    #[test]
+    fn pulse_25percent_5hz() {
+        let mut lfo = LFO::new(Waveform::Pulse(0.25), 5.0, 1000.0);
         lfo.set_gain(0.5);
-        create_chart(&mut lfo, 1.0, "chart/square_2hz.png", "square_2hz");
+        create_chart(&mut lfo, 1.0, "chart/pulse_25percent_2hz.png", "pulse_25percent_2hz");
     }
 }
