@@ -83,7 +83,7 @@ impl LFO {
     }
 
     fn generate(&mut self) -> f64 {
-        let phase = phase(self.freq, self.time_step as f64 / self.sample_rate, self.theta);
+        let phase = phase(self.freq, self.time_step / self.sample_rate, self.theta);
         self.increment_time_step();
         match self.waveform {
             Waveform::Sine => {
